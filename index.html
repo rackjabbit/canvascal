@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>CanvasCal Bluetooth setup</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 40%27%3E%3Crect x=%273%27 y=%277%27 width=%2734%27 height=%2729%27 rx=%275%27 fill=%27%23fff%27 stroke=%27%23000%27 stroke-width=%273%27/%3E%3Cpath d=%27M13 25l5 5 9-10%27 fill=%27none%27 stroke=%27%231f9d55%27 stroke-width=%274%27/%3E%3C/svg%3E">
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--fg:#16181d;--mu:#5c6370;--ln:#d9dce1;--ac:#1f5fd6;--acf:#fff;--ok:#16803c;--bad:#c62828;--warn:#9a6200;--wb:#fff5dc;--eb:#fdecec;--sel:#e8f0fe}
+@media(prefers-color-scheme:dark){:root{--bg:#111316;--card:#1c1f24;--fg:#eceef1;--mu:#a2a9b4;--ln:#353a42;--ac:#7aa7ff;--acf:#0b1220;--ok:#5fd28a;--bad:#ff8a80;--warn:#f0c060;--wb:#2e2614;--eb:#3a1d1d;--sel:#1d2b45}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+header{display:flex;align-items:center;gap:12px;padding:14px 18px;padding-top:max(14px,env(safe-area-inset-top))}
+header h1{font-size:20px;margin:0}header p{margin:0;color:var(--mu);font-size:14px}
+main{max-width:520px;margin:0 auto;padding:0 14px 40px}
+h2{font-size:23px;margin:6px 0 8px;outline:0}
+h3{font-size:16px;margin:18px 0 6px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:16px;margin:12px 0}
+.mu{color:var(--mu);font-size:15px}
+label{display:block;font-weight:600;margin:14px 0 6px}
+input,select{width:100%;font:inherit;color:inherit;background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:12px;min-height:48px}
+input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:3px solid var(--ac);outline-offset:1px}
+.pw{display:flex;gap:8px}.pw input{flex:1}
+button{font:inherit;cursor:pointer;border-radius:12px;min-height:48px;padding:10px 16px;border:1px solid var(--ln);background:var(--card);color:var(--fg)}
+button.p{background:var(--ac);color:var(--acf);border-color:var(--ac);font-weight:600;width:100%;margin-top:16px}
+button.s{width:100%;margin-top:10px}
+button.d{color:var(--bad);width:100%;margin-top:10px}
+button.dd{background:var(--bad);color:#fff;border-color:var(--bad)}
+button.l{border:0;background:none;color:var(--ac);padding:8px 4px;min-height:44px}
+button:disabled{opacity:.45;cursor:default}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nets{list-style:none;margin:0;padding:0}
+.nets button{width:100%;display:flex;align-items:center;gap:10px;text-align:left;border-radius:0;border:0;border-top:1px solid var(--ln);background:none;min-height:52px}
+.nets li:first-child button{border-top:0}
+.nets button[aria-pressed=true]{background:var(--sel);font-weight:600}
+.nets .n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+svg{flex:none}
+.note{border-radius:10px;padding:10px 12px;margin:12px 0;font-size:15px}
+.w{background:var(--wb);color:var(--fg);border-left:4px solid var(--warn)}
+.e{background:var(--eb);border-left:4px solid var(--bad)}.g{border-left:4px solid var(--ok);background:var(--sel)}
+.err{color:var(--bad);font-size:15px;margin:6px 0 0}
+.err:empty{display:none}
+.steps ol{list-style:none;display:flex;gap:4px;margin:4px 0 10px;padding:0}
+.steps li{flex:1;font-size:12px;color:var(--mu);text-align:center;border-top:4px solid var(--ln);padding-top:5px}
+.steps li.d{border-color:var(--ok)}.steps li.c{border-color:var(--ac);color:var(--fg);font-weight:600}
+.steps span{display:none}
+details{margin:10px 0}summary{cursor:pointer;color:var(--ac);font-weight:600;min-height:44px;display:flex;align-items:center}
+ol.how{padding-left:22px;margin:4px 0}ol.how li{margin:4px 0}
+code{font-size:13px;word-break:break-all;background:var(--bg);padding:2px 4px;border-radius:4px}
+.seg{display:flex;border:1px solid var(--ln);border-radius:10px;overflow:hidden}
+.seg label{flex:1;margin:0;text-align:center;padding:12px;font-weight:400;cursor:pointer;min-height:48px}
+.seg input{position:absolute;opacity:0;width:1px;height:1px}
+.seg input:checked+span{font-weight:700;color:var(--ac)}
+.seg label:has(input:checked){background:var(--sel)}
+.st{list-style:none;padding:0;margin:0}
+.st li{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--ln)}
+.st li:first-child{border-top:0}
+.st .i{width:24px;height:24px;flex:none;display:grid;place-items:center;font-weight:700}
+.st .ok .i{color:var(--ok)}.st .bad .i{color:var(--bad)}.st .wn .i{color:var(--warn)}.st .pe{color:var(--mu)}
+.st small{display:block;color:var(--mu)}
+.spin{width:18px;height:18px;border:3px solid var(--ln);border-top-color:var(--ac);border-radius:50%;animation:r 1s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes r{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+dl{margin:0}dl div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--ln)}dl div:first-child{border-top:0}
+dt{color:var(--mu)}dd{margin:0;text-align:right;font-weight:600;overflow-wrap:anywhere}
+.big{font-size:52px;text-align:center;color:var(--ok);margin:10px 0 0}
+#net{position:sticky;top:0;z-index:5;margin:0;border-radius:0}
+.sr{position:absolute;left:-9999px}
+
+.cd{font-size:30px;letter-spacing:.5em;text-align:center;font-variant-numeric:tabular-nums;max-width:220px;display:block;margin:0 auto}
+.ctr{text-align:center}
+#net .row{margin-top:8px;justify-content:flex-start}
+a.bt{display:block;text-align:center;text-decoration:none;padding:13px;border-radius:12px;background:var(--ac);color:var(--acf);font-weight:600;margin-top:16px}
+</style></head>
+<body>
+<header><svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect x="3" y="7" width="34" height="29" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M3 15h34M12 3v8M28 3v8" stroke="currentColor" stroke-width="3"/><path d="M13 25l5 5 9-10" fill="none" stroke="#1f9d55" stroke-width="3.5" stroke-linecap="round"/></svg>
+<div><h1>CanvasCal</h1><p id="dev">Bluetooth setup</p></div></header>
+<div id="net" class="note w" role="alert" hidden></div>
+<main id="app" aria-live="polite"><p class="mu">Loading…</p></main>
+<p id="live" class="sr" aria-live="polite"></p>
+<script>
+'use strict';
+/* Public address of this page. Shown to people on unsupported browsers and on the "done" screen.
+   Replace with the real hosting URL once it is decided. */
+var SETUP_URL='https://rackjabbit.github.io/canvascal/';
+/* BLE_PROTOCOL.md (proto 1): Nordic UART service, newline-terminated JSON, chunks of MTU-3.
+   Web Bluetooth doesn't expose the MTU, so writes use the minimum (23-3 = 20 bytes). */
+var SVC='6e400001-b5a3-f393-e0a9-e50e24dcca9e',RXU='6e400002-b5a3-f393-e0a9-e50e24dcca9e',TXU='6e400003-b5a3-f393-e0a9-e50e24dcca9e',CHUNK=20;
+var $=function(s){return document.querySelector(s)};
+var A=$('#app'),NB=$('#net'),SP='<span class="spin"></span>',NC='Lost the Bluetooth connection. Tap Reconnect above, then try again.';
+var S={info:{},st:{},view:'',e:{},nets:null,sel:null,pt:0,halt:0,push:0};
+var ST=['wifi','time','zip','feed','weather'];
+var SL={wifi:'Joining your Wi‑Fi',time:'Getting the time',zip:'Finding your ZIP code',feed:'Reading your Canvas calendar',weather:'Getting the weather'};
+var STEPS=['wifi','feed','loc','test'],SN={wifi:'Wi‑Fi',feed:'Canvas',loc:'Location',test:'Test & save'};
+var TZ=[['America/New_York','Eastern'],['America/Chicago','Central'],['America/Denver','Mountain'],['America/Phoenix','Arizona'],['America/Los_Angeles','Pacific'],['America/Anchorage','Alaska'],['Pacific/Honolulu','Hawaii'],['America/Puerto_Rico','Atlantic (Puerto Rico)']];
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return '&#'+c.charCodeAt(0)+';'})}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function nm(){return esc(S.info.name||'your calendar')}
+function say(t){$('#live').textContent=t}
+function pageUrl(){return /^https:/.test(location.protocol)?location.origin+location.pathname:SETUP_URL}
+var IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+
+/* ---------- Bluetooth transport: one request in flight, line-buffered notifications ---------- */
+var T={dev:null,rx:null,tx:null,on:false,code:'',dec:null,buf:'',q:Promise.resolve(),pend:null,id:0,last:0,ing:0};
+function onNote(ev){
+  var v=ev.target.value,i;T.buf+=T.dec.decode(new Uint8Array(v.buffer,v.byteOffset,v.byteLength),{stream:true});
+  while((i=T.buf.indexOf('\n'))>=0){
+    var l=T.buf.slice(0,i).trim(),m;T.buf=T.buf.slice(i+1);if(!l)continue;
+    try{m=JSON.parse(l)}catch(e){continue}
+    var p=T.pend;
+    if(p&&(m.id===p.id||(m.id==null&&m.type!=='status'))){T.pend=null;clearTimeout(p.t);p.ok(m)}
+    else if(m.type==='status')onPush(m);
+  }
+  if(T.buf.length>4096)T.buf='';
+}
+async function link(){
+  var g=await T.dev.gatt.connect(),s=await g.getPrimaryService(SVC),rx=await s.getCharacteristic(RXU),tx=await s.getCharacteristic(TXU);
+  if(T.tx)T.tx.removeEventListener('characteristicvaluechanged',onNote);
+  T.rx=rx;T.tx=tx;T.dec=new TextDecoder();T.buf='';
+  tx.addEventListener('characteristicvaluechanged',onNote);await tx.startNotifications();T.on=true;
+}
+async function write(str){
+  var b=new TextEncoder().encode(str);
+  for(var o=0;o<b.length;o+=CHUNK){if(!T.on)throw new Error('disconnected');var c=b.slice(o,o+CHUNK);await(T.rx.writeValueWithResponse?T.rx.writeValueWithResponse(c):T.rx.writeValue(c))}
+}
+function send1(c,f,to){
+  if(!T.on)return Promise.reject(new Error('disconnected'));
+  var id=++T.id,m=Object.assign({cmd:c,id:id},f||{});T.last=Date.now();
+  return new Promise(function(ok,no){
+    T.pend={id:id,ok:ok,no:no,t:0};
+    write(JSON.stringify(m)+'\n').then(function(){if(T.pend&&T.pend.id===id)T.pend.t=setTimeout(function(){if(T.pend&&T.pend.id===id){T.pend=null;no(new Error('timeout'))}},to||8000)},
+      function(e){if(T.pend&&T.pend.id===id){T.pend=null;no(e)}});
+  });
+}
+function cmd(c,f,to){var r=function(){return send1(c,f,to)},p=T.q.then(r,r);T.q=p.catch(function(){});return p}
+/* api(): like the portal's fetch helper. Normalises replies to {ok,code,msg,...}; re-sends hello if the board says "locked". */
+async function api(c,f,to){
+  var r=await cmd(c,f,to);
+  if(r.code==='locked'&&T.code&&c!=='hello'){var h=await cmd('hello',{code:T.code});if(h.ok)r=await cmd(c,f,to)}
+  if(r.ok==null)r.ok=r.type!=='error';return r;
+}
+function onDisc(){
+  T.on=false;var p=T.pend;T.pend=null;if(p){clearTimeout(p.t);p.no(new Error('disconnected'))}
+  if(S.halt)return;
+  drop(0);setTimeout(function(){if(!T.on&&!S.halt)reconnect()},1000);
+}
+function drop(failed){
+  NB.hidden=false;
+  NB.innerHTML='<b>'+(failed?'Couldn’t reconnect.':'Bluetooth connection lost.')+'</b> Keep this phone close to the calendar. '
+   +(S.info.configured?'In settings mode the calendar turns Bluetooth off about 3 minutes after your last action; if its screen shows your week again, press its RESET button (or replug it) first. ':'')
+   +(S.view==='test'?'The test keeps running on the calendar, and results also show on its screen. ':'')
+   +'<div class="row"><button class="p" id="rc" style="margin:0;width:auto">Reconnect</button></div>';
+  $('#rc').onclick=function(){reconnect()};
+}
+async function reconnect(){
+  if(T.ing||T.on)return;T.ing=1;NB.hidden=false;NB.innerHTML=SP+' Reconnecting to '+nm()+'…';
+  try{
+    await Promise.race([link(),sleep(15000).then(function(){throw new Error('timeout')})]);
+    if(!T.code){T.ing=0;NB.hidden=true;return go('code')}
+    var h=await api('hello',{code:T.code},6000);T.ing=0;
+    if(!h.ok){T.code='';NB.hidden=true;go('code');$('#ce').textContent='The calendar restarted and has a new code. Enter the 4 digits now on its screen.';return}
+    NB.hidden=true;say('Reconnected to the calendar.');await resume(1);
+  }catch(e){T.ing=0;if(!T.on)drop(1)}
+}
+function btErr(e){
+  var n=(e&&e.name)||'',m=(e&&e.message)||String(e);
+  if(n==='NotFoundError'&&/cancel/i.test(m))return 'No calendar was picked. If yours wasn’t in the list, check it’s plugged in and showing a Bluetooth code, then try again.';
+  if(/adapter|bluetooth.*(off|unavailable|not available)/i.test(m))return 'Bluetooth is off or not available. Turn on Bluetooth on this device, then try again.';
+  if(n==='SecurityError')return 'Bluetooth needs a secure page. Open '+esc(pageUrl())+' (with https://) in Chrome.';
+  if(n==='NotAllowedError')return 'Bluetooth permission is blocked. Allow Bluetooth for this site (and “Nearby devices” for Chrome in Android settings), then try again.';
+  if(n==='NotFoundError')return 'Couldn’t find the calendar’s setup service. Make sure its screen shows a Bluetooth code, then try again.';
+  return 'Couldn’t connect over Bluetooth. Move closer to the calendar and try again. If it keeps failing, press its RESET button. ('+esc(m)+')';
+}
+async function pick(btn){
+  var e=$('#ce');e.textContent='';btn.disabled=true;btn.innerHTML=SP+' Connecting…';
+  try{
+    var d=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'CanvasCal'}],optionalServices:[SVC]});
+    if(T.dev!==d){if(T.dev){T.dev.removeEventListener('gattserverdisconnected',onDisc);if(T.dev.gatt.connected)T.dev.gatt.disconnect()}d.addEventListener('gattserverdisconnected',onDisc)}
+    T.dev=d;T.code='';S.halt=0;$('#dev').textContent=d.name||'CanvasCal';
+    await link();go('code');
+  }catch(x){e.innerHTML=btErr(x);btn.disabled=false;btn.textContent='Connect to your calendar'}
+}
+/* In settings mode the board closes Bluetooth 3 min after the last command; any user activity here pings it (at most once a minute). */
+['click','input'].forEach(function(t){document.addEventListener(t,function(){if(T.on&&T.code&&S.info.configured&&!S.halt&&Date.now()-T.last>60000)api('status').catch(function(){})},true)});
+
+/* ---------- helpers (shared verbatim with ../setup_page.html; keep in sync) ---------- */
+function posix(z){
+  function off(d){var p={};new Intl.DateTimeFormat('en-US',{timeZone:z,hourCycle:'h23',hour12:false,year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric'}).formatToParts(d).forEach(function(x){p[x.type]=+x.value});return Math.round((Date.UTC(p.year,p.month-1,p.day,p.hour%24,p.minute)-d.getTime())/6e4)}
+  try{var y=new Date().getFullYear(),a=off(new Date(Date.UTC(y,0,15,12))),b=off(new Date(Date.UTC(y,6,15,12)));
+    var N={'-240':'AST','-300':'EST','-360':'CST','-420':'MST','-480':'PST','-540':'AKST','-600':'HST'}[a];
+    if(!N)return '';if(b===a)return N+(-a/60);if(b===a+60)return N+(-a/60)+N.replace('ST','DT')+',M3.2.0,M11.1.0';}catch(e){}
+  return '';
+}
+function phoneTz(){try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){return ''}}
+function hr(h){h=+h;return (h%12||12)+(h<12?' AM':' PM')}
+function bars(r){var n=r>=-55?4:r>=-67?3:r>=-78?2:1,s='<svg width="22" height="18" viewBox="0 0 22 18" role="img" aria-label="Signal '+n+' of 4">';for(var i=0;i<4;i++)s+='<rect x="'+(i*6)+'" y="'+(14-i*4)+'" width="4" height="'+(4+i*4)+'" rx="1" fill="currentColor" opacity="'+(i<n?1:.25)+'"/>';return s+'</svg>'}
+var LOCK='<svg width="14" height="16" viewBox="0 0 14 16" role="img" aria-label="Password protected"><rect x="1" y="7" width="12" height="9" rx="2" fill="currentColor"/><path d="M4 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+function fixUrl(u){return u.replace(/\s+/g,'').replace(/^webcals?:\/\//i,'https://')}
+function urlErr(u){
+  if(!u)return 'Paste your Calendar Feed link.';
+  if(u.length>512)return 'That link is too long (512 max).';
+  if(/^http:\/\//i.test(u))return 'The link must start with https://';
+  if(!/^https:\/\/[^\/\s?#]+\/\S+\.ics$/i.test(u.split(/[?#]/)[0]))return 'That isn’t a Calendar Feed link. It should start with https:// and end in .ics.';
+  return '';
+}
+function host(u){var m=/^https:\/\/([^\/]+)/i.exec(u);return m?m[1]:''}
+function hint(a){
+  if(a==='wpa2_ent')return 'School/work networks that need a username (like eduroam) won’t work. Use home Wi‑Fi, a phone hotspot, or your campus network for game consoles'+(S.info.mac?' (register MAC <b>'+esc(S.info.mac)+'</b>)':'')+'.';
+  if(a==='wpa3')return 'WPA3‑only networks may not work. If the test fails, set the router to WPA2/WPA3 mixed mode.';
+  if(a==='open')return 'Open network: if it has a sign‑in page (guest or campus Wi‑Fi), the calendar can’t get online.';
+  if(a==='wep')return 'WEP is outdated and may not work.';
+  return '';
+}
+var CODES={
+  no_ap_found:['wifi','Couldn’t find that Wi‑Fi network','Check the name. The calendar only sees 2.4 GHz, so 5 GHz‑only networks won’t work. Is it in range?'],
+  auth_fail:['wifi','Wrong Wi‑Fi password','Re‑enter it carefully; it’s case‑sensitive.'],
+  timeout:['wifi','Wi‑Fi took too long','Check the password or move closer to the router.'],
+  dhcp_fail:['wifi','Joined Wi‑Fi but got no address','Restart the router, or check for device limits or MAC filtering.'],
+  ntp_fail:['time','Connected, but no internet','Is the network online? Networks with a sign‑in page won’t work.'],
+  zip_not_found:['zip','ZIP code not found','Double‑check your 5‑digit US ZIP code.'],
+  zip_fail:['zip','Couldn’t look up your ZIP code','Try again in a minute.'],
+  dns:['feed','Couldn’t find your school’s Canvas server','Check you copied the whole link.'],
+  tls:['feed','Secure connection to Canvas failed','Try again. If it keeps failing, re‑copy the Calendar Feed link.'],
+  parse:['feed','That link isn’t a Canvas calendar','Copy the Calendar Feed link from Canvas again.'],
+  weather_fail:['weather','Weather unavailable right now','Weather will retry at the next update.'],
+  not_tested:['test','Test needed','Run the test (and let it pass) before saving.'],
+  busy:['test','Calendar is busy','A test is still running. Wait a few seconds and try again.'],
+  not_configured:['test','Not set up yet','Finish setup and save first.'],
+  no_ics:['feed','No Canvas link saved','Tap Change settings and add your Calendar Feed link.']
+};
+function why(c,m){
+  if(!c)return null;var k=CODES[c];
+  if(!k&&/^http_\d+$/.test(c)){var n=+c.slice(5);k=n===401||n===403||n===404?['feed','Canvas didn’t accept your link (error '+n+')','The link may be old. In Canvas, open Calendar → Calendar Feed and copy it again.']:['feed','Canvas returned error '+n,n>=500?'Canvas may be having trouble. Try again in a few minutes.':'Re‑copy the Calendar Feed link and try again.']}
+  return k||['test','Something went wrong',m||c];
+}
+function fix(st){return {wifi:['wifi','Change Wi‑Fi'],time:['wifi','Change Wi‑Fi'],zip:['loc','Change ZIP code'],feed:['feed','Change Canvas link']}[st]}
+
+Object.assign(CODES,{
+  bad_code:['code','Wrong code','Check the 4 digits after “code” on the calendar screen. It changes every time the calendar restarts.'],
+  locked:['code','Code needed','Enter the 4‑digit code from the calendar screen.'],
+  not_configured:['test','Not set up yet','Finish setup and save first.'],
+  no_ics:['feed','No Canvas link saved','Tap Change settings and add your Calendar Feed link.']
+});
+
+/* ---------- state ---------- */
+function seed(){
+  var i=S.info,p=i.pending||{},t=p.tz_iana||i.tz_iana||phoneTz();
+  S.e={ssid:p.wifi_ssid!=null?p.wifi_ssid:(i.wifi_ssid||''),wst:p.wifi_ssid!=null,ics:!!(p.has_ics||i.has_ics),ist:!!p.has_ics,
+    zip:p.zip||i.zip||'',tz:t,units:p.units||i.units||'F',rh:p.refresh_hour!=null?p.refresh_hour:(i.refresh_hour!=null?i.refresh_hour:6)};
+}
+/* After hello (or a reconnect): reload info+status and pick up where things are, like the portal does on page load. */
+async function resume(again){
+  S.info=await api('info');S.st=await api('status');
+  $('#dev').textContent=(S.info.name||'CanvasCal')+(S.info.configured?' · settings':' · setup');
+  var i=S.info,s=S.st||{},p=i.pending,form=['wifi','feed','loc'].indexOf(S.view)>=0;
+  if(!(again&&form))seed();
+  if(again&&S.view==='test'&&S.tq&&s.stage==='idle')return runTest();   // link dropped before the board got "test"
+  if(s.running)return S.view==='test'?(paint(),pollTest()):go('test',1);
+  if(!s.running&&s.success!=null&&(!i.configured||p))return S.view==='test'?paint():go('test');   // failures keep the failing stage, not "done"
+  if(again&&(form||S.view==='manage'))return;   // keep what the user is typing
+  if(i.configured)return go('manage');
+  go(!S.e.wst?'wifi':!S.e.ist?'feed':!(p&&p.zip)?'loc':'test');
+}
+function go(v,poll){
+  S.view=v;S.pt++;A.innerHTML=V[v]();if(B[v])B[v]();
+  var h=A.querySelector('h2');if(h){h.tabIndex=-1;h.focus({preventScroll:true})}window.scrollTo(0,0);
+  if(poll)pollTest();
+}
+function head(v){var n=STEPS.indexOf(v),m=S.info.configured;
+  return '<nav class="steps" aria-label="Setup progress"><ol>'+STEPS.map(function(k,i){return '<li class="'+(i<n?'d':i===n?'c':'')+'"'+(i===n?' aria-current="step"':'')+'><span>Step '+(i+1)+' of 4: </span>'+SN[k]+'</li>'}).join('')+'</ol></nav>'
+  +(n>0||m?'<div class="row"><button class="l" data-go="'+(n>0?STEPS[n-1]:'manage')+'">‹ '+(n>0?'Back':'Cancel')+'</button>'+(m&&n>0?'<button class="l" data-go="manage">Cancel</button>':'')+'</div>':'');
+}
+A.addEventListener('click',function(ev){var b=ev.target.closest('[data-go]');if(b)go(b.getAttribute('data-go'))});
+
+/* ---------- views ---------- */
+var V={},B={};
+V.nobt=function(){var sec=window.isSecureContext!==false,u=esc(pageUrl());
+  if(!sec)return '<h2>Open the secure page</h2><div class="card"><p>Bluetooth setup only works on a secure (https://) page. Open this address in Chrome:</p><p><code>'+u+'</code></p></div>';
+  if(IOS)return '<h2>On iPhone, use the calendar’s Wi‑Fi</h2><div class="card"><p>iPhones and iPads can’t use Bluetooth from a web page, so set up over the calendar’s own Wi‑Fi instead:</p><ol class="how"><li>Open the <b>Camera</b> and point it at the QR code on the calendar screen.</li><li>Tap <b>Join</b> when your iPhone offers the CanvasCal network.</li><li>The setup page opens by itself. If it doesn’t, open <b>http://192.168.4.1</b> in Safari.</li></ol></div>';
+  var and=/Android/i.test(navigator.userAgent);
+  return '<h2>Open this page in Chrome</h2><div class="card"><p>This browser can’t use Bluetooth. Open this page in <b>Google Chrome</b> (Android, Windows, Mac, ChromeOS) or <b>Microsoft Edge</b> on a computer:</p><p><code>'+u+'</code></p>'
+   +(and?'<a class="bt" href="intent://'+u.replace(/^https:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end">Open in Chrome</a>':'')+'</div>'
+   +'<details><summary>Or use the calendar’s Wi‑Fi</summary><p class="mu">Scan the QR code on the calendar screen with your camera, join the CanvasCal network, and open <b>http://192.168.4.1</b>. Some Android phones leave that network because it has no internet, which is why Bluetooth is recommended.</p></details>';
+};
+V.land=function(){return '<h2>Set up your calendar</h2><p class="mu">Plug in your calendar. Its screen should show <b>Setup mode</b> or <b>Settings</b> with a Bluetooth code. Keep this phone or computer close by.</p>'
+ +'<button class="p" id="cn">Connect to your calendar</button><p class="err" id="ce" role="alert"></p><div id="av"></div>'
+ +'<p class="mu">Your phone stays on its normal internet. Bluetooth only talks to the calendar. In the list that pops up, pick the one named like <b>CanvasCal‑XXXX</b> (it matches the name on the screen).</p>'
+ +'<details><summary>Screen shows your week instead?</summary><p class="mu">Press the calendar’s RESET button (or unplug it and plug it back in). Settings and Bluetooth stay on for about 3 minutes.</p></details>';};
+B.land=function(){$('#cn').onclick=function(){pick(this)};
+  if(navigator.bluetooth.getAvailability)navigator.bluetooth.getAvailability().then(function(a){if(!a&&$('#av'))$('#av').innerHTML='<div class="note w">Bluetooth looks turned off or unavailable on this device. Turn it on, then tap Connect.</div>'}).catch(function(){});
+};
+V.code=function(){return '<h2>Enter the Bluetooth code</h2><p class="mu">Look at the calendar screen. Below “Or Bluetooth in Chrome” it shows <b>code</b> followed by 4 large digits. They’re also the last 4 digits of the 8‑digit number after “Pass”. The code changes every time the calendar restarts.</p>'
+ +'<label for="cd" class="ctr">4‑digit code</label><input id="cd" class="cd" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="one-time-code">'
+ +'<p class="err ctr" id="ce" role="alert"></p><button class="p" id="nx">Continue</button>';};
+B.code=function(){var cd=$('#cd');cd.focus();
+  cd.onkeydown=function(e){if(e.key==='Enter')$('#nx').click()};
+  $('#nx').onclick=async function(){var e=$('#ce'),c=cd.value.replace(/\D/g,'');if(c.length===8)c=c.slice(4);e.textContent='';
+    if(c.length!==4){e.textContent='Enter the 4 digits shown after “code”.';return cd.focus()}
+    var b=this;b.disabled=true;b.innerHTML=SP+' Checking…';
+    try{var r=await api('hello',{code:c},6000);
+      if(r.ok){T.code=c;return resume()}
+      e.textContent=r.code==='bad_code'?'That code didn’t match. '+CODES.bad_code[2]:(r.msg||'The calendar said no. Try again.');cd.select();
+    }catch(x){e.textContent=T.on?'The calendar didn’t answer. Try again.':NC}
+    b.disabled=false;b.textContent='Continue';
+  };
+};
+V.wifi=function(){var m=S.info.configured;return head('wifi')+'<h2>Connect to Wi‑Fi</h2><p class="mu">Pick the network the calendar should use. It needs <b>2.4 GHz</b> Wi‑Fi, which most home routers have.</p>'
+ +'<div class="card"><div class="row"><b>Networks</b><button class="l" id="rs">Rescan</button></div><ul class="nets" id="nl" aria-label="Wi‑Fi networks"></ul></div>'
+ +'<div id="pf" hidden><div id="wh"></div><div id="sw"><label for="ss">Network name (SSID)</label><input id="ss" maxlength="32" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"></div>'
+ +'<div id="pw"><label for="pw1">Wi‑Fi password</label><div class="pw"><input id="pw1" type="password" maxlength="63" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"><button id="sh" type="button" aria-pressed="false">Show</button></div></div></div>'
+ +'<p class="err" id="we" role="alert"></p><button class="p" id="nx">Next</button>'
+ +'<details><summary>Don’t see your network?</summary><p class="mu">The calendar only sees 2.4 GHz. If your router has separate 5 GHz and 2.4 GHz names, pick the 2.4 GHz one; if it’s 5 GHz only, turn on 2.4 GHz in its app. Hidden network? Use “Other network”.</p></details>';};
+B.wifi=function(){
+  var m=S.info.configured,nl=$('#nl'),pf=$('#pf'),pw=$('#pw1');
+  function list(){
+    var h='';if(m)h+='<li><button data-k="keep" aria-pressed="false"><span class="n">Keep current: '+esc(S.info.wifi_ssid)+'</span></button></li>';
+    if(!S.nets)h+='<li><button disabled>'+SP+'<span class="n">Scanning for networks…</span></button></li>';
+    else{if(!S.nets.length)h+='<li><button disabled><span class="n">No 2.4 GHz networks found. Try Rescan.</span></button></li>';
+      S.nets.forEach(function(n,i){h+='<li><button data-k="'+i+'" aria-pressed="false"><span class="n">'+esc(n.ssid)+'</span>'+(n.auth!=='open'?LOCK:'')+bars(n.rssi)+'</button></li>'})}
+    h+='<li><button data-k="other" aria-pressed="false"><span class="n">Other network…</span></button></li>';nl.innerHTML=h;
+    if(S.sel==null){if(m&&!S.e.wst)S.sel='keep';else if(S.nets){var f=S.nets.findIndex(function(n){return n.ssid===S.e.ssid});if(f>=0)S.sel=String(f)}}
+    if(S.sel!=null)choose(S.sel,1);
+  }
+  function choose(k,quiet){
+    if(k!=='keep'&&k!=='other'&&!(S.nets&&S.nets[+k]))return;
+    S.sel=k;nl.querySelectorAll('button[data-k]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-k')===k)});
+    var n=S.nets&&S.nets[+k],a=n?n.auth:'';pf.hidden=k==='keep';$('#sw').hidden=k!=='other';$('#pw').hidden=a==='open';
+    if(k==='other'&&!quiet)$('#ss').value='';
+    var w=hint(a);$('#wh').innerHTML=w?'<div class="note w">'+w+'</div>':'';$('#we').textContent='';
+    if(!quiet&&k!=='keep')(k==='other'?$('#ss'):a==='open'?$('#nx'):pw).focus();
+  }
+  async function scan(){
+    S.nets=null;S.sel=S.sel==='other'||S.sel==='keep'?S.sel:null;list();var tk=S.pt;
+    for(var i=0;i<25&&tk===S.pt;i++){try{var r=await api('scan');if(r.ok&&!r.scanning){S.nets=r.networks||[];break}}catch(e){if(!T.on)break}await sleep(1000)}
+    if(tk===S.pt){if(!S.nets)S.nets=[];list()}
+  }
+  nl.addEventListener('click',function(ev){var b=ev.target.closest('button[data-k]');if(b)choose(b.getAttribute('data-k'))});
+  $('#rs').onclick=scan;
+  $('#sh').onclick=function(){var s=pw.type==='password';pw.type=s?'text':'password';this.textContent=s?'Hide':'Show';this.setAttribute('aria-pressed',s)};
+  $('#nx').onclick=async function(){
+    var e=$('#we'),k=S.sel;e.textContent='';
+    if(k==null)return e.textContent='Pick a network, or choose “Other network”.';
+    if(k==='keep'){S.e.wst=false;return go('feed')}
+    var n=k==='other'?null:S.nets[+k],ss=n?n.ssid:$('#ss').value.trim(),p=n&&n.auth==='open'?'':pw.value;
+    if(!ss||ss.length>32)return e.textContent='Enter the network name (1–32 characters).';
+    if(p.length&&(p.length<8||p.length>63))return e.textContent='Wi‑Fi passwords are 8–63 characters.';
+    if(!p.length&&n&&n.auth!=='open')return e.textContent='Enter the Wi‑Fi password.';
+    if(await stage({wifi_ssid:ss,wifi_pass:p},e,this)){S.e.ssid=ss;S.e.wst=true;go('feed')}
+  };
+  if(S.nets)list();else scan();
+};
+V.feed=function(){var e=S.e;return head('feed')+'<h2>Link your Canvas calendar</h2><p class="mu">Paste your private Canvas <b>Calendar Feed</b> link. Keep it secret like a password.</p>'
+ +(e.ics?'<div class="note w">✓ A Canvas link is already '+(e.ist?'added':'saved')+'. Leave blank to keep it.</div>':'')
+ +'<details'+(e.ics?'':' open')+'><summary>How to find the link</summary><ol class="how"><li>Open Canvas in another browser tab and log in.</li><li>Open <b>Calendar</b> from the left menu.</li><li>At the bottom right, click <b>Calendar Feed</b>.</li><li>Copy the link, come back to this tab and paste it below. It looks like<br><code>https://yourschool.instructure.com/feeds/calendars/user_….ics</code></li></ol>'
+ +'<p class="mu">On a phone, if you don’t see “Calendar Feed”, turn on <b>Desktop site</b> in Chrome’s ⋮ menu. The Canvas app doesn’t show it. This tab stays connected while you look.</p></details>'
+ +'<label for="ic">Calendar Feed link</label><input id="ic" type="url" inputmode="url" maxlength="600" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://…/feeds/calendars/user_….ics">'
+ +'<p class="err" id="fe" role="alert"></p><button class="p" id="nx">Next</button>';};
+B.feed=function(){var ic=$('#ic');
+  $('#nx').onclick=async function(){var e=$('#fe'),u=fixUrl(ic.value);e.textContent='';
+    if(!u&&S.e.ics)return go('loc');
+    var x=urlErr(u);if(x){e.textContent=x;return ic.focus()}
+    ic.value=u;var b=this;if(await stage({ics_url:u},e,b,'Sending…')){ic.value='';S.e.ics=S.e.ist=true;go('loc')}
+  };
+};
+V.loc=function(){var e=S.e,pt=phoneTz(),o=TZ.slice();if(e.tz&&!TZ.some(function(z){return z[0]===e.tz}))o.unshift([e.tz,e.tz.replace(/_/g,' ')]);
+ var h='';for(var i=0;i<24;i++)h+='<option value="'+i+'"'+(+e.rh===i?' selected':'')+'>'+hr(i)+'</option>';
+ return head('loc')+'<h2>Location & time</h2><p class="mu">Used for the weather forecast and to show the right days.</p>'
+ +'<label for="zp">US ZIP code</label><input id="zp" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="postal-code" value="'+esc(e.zip)+'">'
+ +'<label for="tz">Time zone</label><select id="tz">'+o.map(function(z){return '<option value="'+esc(z[0])+'"'+(z[0]===e.tz?' selected':'')+'>'+esc(z[1])+(z[0]===pt?' (this device)':'')+'</option>'}).join('')+'</select>'
+ +'<label id="ul">Temperature</label><div class="seg" role="radiogroup" aria-labelledby="ul"><label><input type="radio" name="u" value="F"'+(e.units!=='C'?' checked':'')+'><span>°F</span></label><label><input type="radio" name="u" value="C"'+(e.units==='C'?' checked':'')+'><span>°C</span></label></div>'
+ +'<label for="rh">Update the calendar every day at</label><select id="rh">'+h+'</select>'
+ +'<p class="err" id="le" role="alert"></p><button class="p" id="nx">Next: test</button>';};
+B.loc=function(){
+  $('#nx').onclick=async function(){var e=$('#le'),z=$('#zp').value.trim(),t=$('#tz').value,u=document.querySelector('input[name=u]:checked').value,r=+$('#rh').value;e.textContent='';
+    if(!/^\d{5}$/.test(z)){e.textContent='Enter a 5‑digit US ZIP code.';return $('#zp').focus()}
+    var b={zip:z,tz_iana:t,units:u,refresh_hour:r},px=posix(t);if(px)b.tz=px;
+    if(await stage(b,e,this)){S.e.zip=z;S.e.tz=t;S.e.units=u;S.e.rh=r;go('test');runTest()}
+  };
+};
+async function stage(b,e,btn,busy){
+  btn.disabled=true;var old=btn.textContent;btn.innerHTML=SP+' '+(busy||'Saving…');
+  try{var r=await api('set',b,10000);
+    if(r.ok)return true;
+    var f={wifi_ssid:'network name',wifi_pass:'Wi‑Fi password',ics_url:'Canvas link',zip:'ZIP code'}[r.field];
+    e.textContent=r.code==='busy'?CODES.busy[2]:r.field==='tz'||r.field==='tz_iana'?'That time zone isn’t supported. Pick one from the list.':r.code==='too_long'?'That link is too long (512 max).':(f?'The calendar didn’t accept the '+f+'. ':'')+(r.msg||r.code||'Please check and try again.');
+  }catch(x){e.textContent=NC}
+  finally{btn.disabled=false;btn.textContent=old}
+  return false;
+}
+V.test=function(){return head('test')+'<h2>Test the connection</h2><p class="mu">The calendar joins <b>'+esc(S.e.ssid||S.info.wifi_ssid||'your Wi‑Fi')+'</b>, reads Canvas and gets the weather (up to 45 s). Results also show on the calendar screen.</p>'
+ +'<div class="card"><ul class="st" id="sl"></ul></div><div id="rs" aria-live="polite"></div><div id="tb"></div>';};
+B.test=function(){paint()};
+function paint(){
+  if(S.view!=='test')return;var s=S.st||{},run=s.running,done=s.stage==='done'||(!run&&s.success!=null),w=why(s.code,s.msg),fail=s.success===false;
+  var cur=ST.indexOf(s.stage);if(fail){var fs=ST.indexOf(w&&w[0]);cur=cur>=0?cur:fs}
+  var h='';ST.forEach(function(k,i){var c,ic,d='';
+    if(s.stage==='idle'||s.stage==null&&!run){c='pe';ic='○'}
+    else if(fail){c=i<cur?'ok':i===cur?'bad':'pe';ic=i<cur?'✓':i===cur?'✕':'–'}
+    else if(done||i<cur){c='ok';ic='✓'}else if(i===cur){c='ac';ic=SP}else{c='pe';ic='○'}
+    if(k==='weather'&&done&&!fail&&s.code==='weather_fail'){c='wn';ic='!';d='Not available right now'}
+    var r=s.result||{};
+    if(c==='ok'&&k==='wifi'&&r.ip)d='Connected ('+esc(r.ip)+')';
+    if(c==='ok'&&k==='zip'&&r.city)d=esc(r.city)+(r.state?', '+esc(r.state):'');
+    if(c==='ok'&&k==='feed'&&r.events!=null)d=r.events+' upcoming item'+(r.events===1?'':'s');
+    h+='<li class="'+c+'"><span class="i" aria-hidden="true">'+ic+'</span><span>'+SL[k]+(c==='bad'?' — failed':c==='ok'?' — done':c==='ac'?' — working…':'')+(d?'<small>'+d+'</small>':'')+'</span></li>';
+  });$('#sl').innerHTML=h;
+  var rs='',tb='';
+  if(run){rs='<p class="mu">'+SP+' Testing… keep this page open and the phone near the calendar.</p>';}
+  else if(fail){var fx=fix(w[0]==='test'&&ST.indexOf(s.stage)>=0?s.stage:w[0]);rs='<div class="note e"><b>'+w[1]+'.</b> '+esc(w[2])+'</div>';say('Test failed: '+w[1]);
+    tb=(fx?'<button class="p" data-go="'+fx[0]+'">'+fx[1]+'</button>':'')+'<button class="'+(fx?'s':'p')+'" id="rt">Test again</button>';}
+  else if(done&&s.success){var r=s.result||{};say('Test passed.');
+    rs='<div class="note g"><b>✓ It works!</b> '+(r.events===0?'No upcoming items in your feed, which is fine if nothing is due.':'Your calendar found '+(r.events!=null?r.events+' upcoming item'+(r.events===1?'':'s'):'your assignments')+'.')
+      +(r.city?' Weather for '+esc(r.city)+(r.state?', '+esc(r.state):'')+'.':'')+(s.code==='weather_fail'?' '+CODES.weather_fail[2]:'')+'</div>';
+    tb='<button class="p" id="sv">Save and finish</button><button class="s" id="rt">Test again</button><p class="err" id="se" role="alert"></p>';}
+  else tb='<button class="p" id="rt">Start test</button>';
+  $('#rs').innerHTML=rs;
+  if($('#tb').getAttribute('data-k')!==tb){$('#tb').innerHTML=tb;$('#tb').setAttribute('data-k',tb);
+    if($('#rt'))$('#rt').onclick=runTest;if($('#sv'))$('#sv').onclick=save;}
+}
+function onPush(m){S.st=m;S.push=Date.now();paint()}
+async function runTest(){
+  S.st={stage:'wifi',running:true,success:null};S.tq=1;paint();
+  try{var r=await api('test');S.tq=0;if(!r.ok&&r.code!=='busy'){S.st={stage:'done',running:false,success:false,code:r.code,msg:r.msg};return paint()}}
+  catch(e){return}   // disconnected: reconnect resumes from status
+  pollTest();
+}
+/* The board pushes status on every stage change; poll as a backup when pushes go quiet. */
+async function pollTest(){
+  var tk=++S.pt;S.push=Date.now();
+  while(tk===S.pt&&T.on){
+    await sleep(1000);if(tk!==S.pt||!T.on)return;
+    if(!(S.st&&S.st.running))return;
+    if(Date.now()-S.push>4000){try{var s=await api('status',null,5000);if(tk!==S.pt)return;S.st=s;S.push=Date.now();paint()}catch(e){}}
+  }
+}
+async function save(){
+  var b=$('#sv'),e=$('#se');b.disabled=true;b.innerHTML=SP+' Saving…';
+  try{var r=await api('save');if(r.ok){S.halt=1;return go('done')}
+    if(r.code==='not_tested'){e.textContent='Settings changed since the last test. Running the test again…';return runTest()}
+    e.textContent=(why(r.code,r.msg)||[])[2]||'Couldn’t save. Try again.';
+  }catch(x){e.textContent=NC}
+  b.disabled=false;b.textContent='Save and finish';
+}
+V.done=function(){S.halt=1;NB.hidden=true;
+ return '<p class="big" aria-hidden="true">✓</p><h2 style="text-align:center">'+(S.info.configured?'Changes saved':'You’re all set!')+'</h2>'
+ +'<div class="card"><p>Your calendar is drawing your week now (the screen flashes for ~15 s). Its Bluetooth turns off by itself in about 20 seconds.</p><p>It updates every day at <b>'+hr(S.e.rh)+'</b>. You can close this page.</p></div>'
+ +'<h3>Changing settings later</h3><p class="mu">Press RESET (or replug the calendar), open <b>'+esc(pageUrl())+'</b> in Chrome, and enter the new code on its screen within 3 minutes.</p>';};
+V.manage=function(){var i=S.info,c=i.city?esc(i.city)+(i.state?', '+esc(i.state):'')+' ':'',lr=i.last_refresh,le=why(i.last_error);
+  if(lr){lr=new Date(lr>1e12?lr:lr*1000);lr=lr.toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}
+  var rows=[['Wi‑Fi',esc(i.wifi_ssid)||'Not set'],['Canvas calendar',i.has_ics?'✓ Linked'+(i.ics_host?'<br><small>'+esc(i.ics_host)+'</small>':''):'Not linked'],['Weather location',(c+esc(i.zip)).trim()||'Not set'],['Time zone',esc((i.tz_iana||i.tz||'').replace(/_/g,' '))||'Not set'],['Units','°'+esc(i.units||'F')],['Daily update',i.refresh_hour!=null?hr(i.refresh_hour):'—'],['Last update',lr||'Not yet']];
+  if(le)rows.push(['Last problem',le[1]]);if(i.battery_mv)rows.push(['Battery',(i.battery_mv/1000).toFixed(2)+' V']);if(i.fw)rows.push(['Firmware',esc(i.fw)]);
+  return '<h2>Your calendar</h2><div class="card"><dl>'+rows.map(function(r){return '<div><dt>'+r[0]+'</dt><dd>'+r[1]+'</dd></div>'}).join('')+'</dl></div>'
+  +(le?'<div class="note e"><b>'+le[1]+'.</b> '+esc(le[2])+'</div>':'')
+  +'<button class="p" id="rf">Refresh now</button><p id="rm" class="mu" aria-live="polite"></p><button class="s" data-go="wifi">Change settings</button><button class="d" id="fr">Factory reset…</button><div id="cf"></div>'
+  +'<p class="mu">In settings mode the calendar turns Bluetooth off about 3 minutes after your last action here, then shows your week.</p>';};
+B.manage=function(){
+  $('#rf').onclick=async function(){var m=$('#rm'),b=this;b.disabled=true;
+    try{var r=await api('refresh');m.textContent=r.ok?'Refreshing. Watch the calendar screen.':(why(r.code,r.msg)||[])[2]||'Couldn’t start a refresh.'}
+    catch(e){m.textContent=NC}b.disabled=false};
+  $('#fr').onclick=function(){$('#cf').innerHTML='<div class="note e" role="alertdialog" aria-labelledby="cq"><p id="cq"><b>Erase all settings?</b> Wi‑Fi, Canvas link and location are removed; the calendar restarts in setup mode with a new code.</p><div class="row"><button id="cn">Cancel</button><button class="dd" id="cy">Erase everything</button></div><p class="err" id="ce"></p></div>';
+    $('#cn').focus();$('#cn').onclick=function(){$('#cf').innerHTML='';$('#fr').focus()};
+    $('#cy').onclick=async function(){this.disabled=true;S.halt=1;
+      try{var r=await api('factory_reset',{confirm:true});if(r.ok)return go('reset');S.halt=0;$('#ce').textContent=r.msg||'Reset failed.'}
+      catch(e){S.halt=0;$('#ce').textContent=NC}this.disabled=false}};
+};
+V.reset=function(){S.halt=1;NB.hidden=true;T.code='';return '<h2>Settings erased</h2><div class="card"><p>The calendar is restarting in setup mode. In a few seconds its screen shows a <b>new</b> Bluetooth code.</p></div><button class="p" id="ag">Set up again</button><p class="err" id="ce" role="alert"></p>';};
+B.reset=function(){$('#ag').onclick=async function(){var b=this,e=$('#ce');b.disabled=true;b.innerHTML=SP+' Reconnecting…';e.textContent='';
+  for(var n=0;n<4;n++){try{if(!T.on)await Promise.race([link(),sleep(15000).then(function(){throw new Error('timeout')})]);S.halt=0;S.info={};S.nets=null;S.sel=null;return go('code')}catch(x){await sleep(2500)}}
+  e.innerHTML='Couldn’t reconnect yet. Wait until the calendar shows “Setup mode”, then try again.';b.disabled=false;b.textContent='Set up again'}};
+
+if(window.isSecureContext===false||!navigator.bluetooth)go('nobt');else go('land');
+</script>
+</body></html>
