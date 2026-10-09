@@ -256,6 +256,7 @@ async function resume(again){
   if(again&&S.view==='test'&&S.tq&&s.stage==='idle')return runTest();   // link dropped before the board got "test"
   if(s.running)return S.view==='test'?(paint(),pollTest()):go('test',1);
   if(!s.running&&s.success!=null&&(!i.configured||p))return S.view==='test'?paint():go('test');   // failures keep the failing stage, not "done"
+  if(again&&S.view==='test'&&!s.running&&s.success!=null)return paint();   // fw 2.2.5 drops BLE during the feed download: show the finished test after reconnect
   if(again&&(form||S.view==='manage'))return;   // keep what the user is typing
   if(i.configured)return go('manage');
   go(!S.e.wst?'wifi':!S.e.ist?'feed':!(p&&p.zip)?'loc':'test');
