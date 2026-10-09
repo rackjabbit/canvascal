@@ -1,6 +1,6 @@
-# CanvasCal setup
+# Inkling setup
 
-Bluetooth setup page for the CanvasCal e-paper Canvas calendar.
+Bluetooth setup page for the Inkling e-paper Canvas calendar.
 
 Served at https://rackjabbit.github.io/canvascal/.
 
